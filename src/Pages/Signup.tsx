@@ -5,59 +5,103 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import { useState } from "react";
 import * as yup from "yup";
-import axios, { AxiosResponse } from "axios";
-import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+type CreateUserResponse = {
+  id: string;
+  email: string;
+  password: string;
+};
 
 const loginSchema = yup.object().shape({
   email: yup
     .string()
-    .email("O campo precisa conter um e-mail válido")
+    .email("O campo precisa conter uma email válido")
     .required("Campo obrigatório"),
   password: yup
     .string()
-    .required("Campo obrigatório")
-    .min(5, "A senha deve ter no mínimo 5 caracteres"),
+    .min(5, "A senha deve ter no mínimo 5 caracteres")
+    .required("Campo obrigatório"),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("password"), null], "As senhas devem ser iguais"),
 });
 
-type note = {
-  id: string;
-  content: string;
-  status: boolean;
+const notify = () => {
+  toast.success("Usuário criado com sucesso!", {
+    position: "top-center",
+    autoClose: 1500,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
+};
+const notifyEmailAlreadyUsed = () => {
+  toast.error("E-mail já em foi usado. Escolha outro!", {
+    position: "top-center",
+    autoClose: 2500,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
 };
 
-export const Login = () => {
+async function createUser(email: string, password: string) {
+  try {
+    const { data, status } = await axios.post<CreateUserResponse>(
+      process.env.REACT_APP_URL + "user",
+      { email, password },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    console.log("STATUS", status);
+
+    if (status === 201) {
+      notifyEmailAlreadyUsed();
+    }
+
+    if (status === 200) {
+      notify();
+    }
+
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.log("error message: ", error.message);
+      return error.message;
+    } else {
+      console.log("unexpected error: ", error);
+      return "An unexpected error occurred";
+    }
+  }
+}
+
+export const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const navigate = useNavigate();
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  const notifyUserNotFound = () => {
-    toast.error("Usuário não encontrado!", {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-  };
-  const notifyEmptyFields = () => {
-    toast.error("Preencha todos os campos!", {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
+  const clearFields = () => {
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
   const handleSubmit = () => {
@@ -67,11 +111,16 @@ export const Login = () => {
         {
           email,
           password,
+          confirmPassword,
         },
         { abortEarly: false }
       )
       .then((validData) => {
-        console.log(validData.email, validData.password);
+        console.log(
+          validData.email,
+          validData.password,
+          validData.confirmPassword
+        );
         setIsLoading(false);
       })
       .catch((errors: yup.ValidationError) => {
@@ -82,48 +131,17 @@ export const Login = () => {
           if (error.path === "password") {
             setPasswordError(error.message);
           }
+          if (error.path === "confirmPassword") {
+            setConfirmPasswordError(error.message);
+          }
           setIsLoading(false);
         });
       });
-    login();
+
+    createUser(email, password);
+    clearFields();
   };
 
-  const login = async () => {
-    const myObject = {
-      password,
-      email,
-    };
-
-    const {
-      data,
-    }: AxiosResponse<
-      {
-        _id: string;
-        _email: string;
-        _password: string;
-        _notes: note[];
-      }[]
-    > = await axios.get(process.env.REACT_APP_URL + "users");
-    console.log(data);
-    const userFound = data.find(
-      (user) =>
-        user._email === myObject.email && user._password === myObject.password
-    );
-
-    if (!email || !password) {
-      notifyEmptyFields();
-      return;
-    }
-    if (!userFound) {
-      // return alert("Usuario não encontrado!");
-      notifyUserNotFound();
-      return;
-    }
-
-    localStorage.setItem("userLogged", "");
-    localStorage.setItem("userLogged", JSON.stringify(userFound._id));
-    navigate("/notes");
-  };
   return (
     <Box
       width="100vw"
@@ -140,13 +158,17 @@ export const Login = () => {
         flexDirection="column"
         gap={2}
       >
-        <Typography variant="h6" align="center">
-          Identifique-se
+        <Typography variant="h4" align="center">
+          Sistema de recados
+        </Typography>
+        <Typography variant="h5" align="center">
+          Crie sua conta
         </Typography>
         <TextField
           fullWidth
           label="E-mail"
           type="email"
+          name="email"
           value={email}
           disabled={isLoading}
           error={!!emailError}
@@ -158,12 +180,27 @@ export const Login = () => {
           fullWidth
           label="Senha"
           type="password"
+          name="password"
+          id="password"
           value={password}
           disabled={isLoading}
           error={!!passwordError}
           helperText={passwordError}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={() => setPasswordError("")}
+        />
+        <TextField
+          fullWidth
+          label="Repita a Senha"
+          type="password"
+          name="confirmPassword"
+          id="confirmPassword"
+          value={confirmPassword}
+          disabled={isLoading}
+          error={!!confirmPasswordError}
+          helperText={confirmPasswordError}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          onKeyDown={() => setConfirmPasswordError("")}
         />
         <Button
           fullWidth
@@ -180,7 +217,7 @@ export const Login = () => {
             ) : undefined
           }
         >
-          Entrar
+          Criar Conta
         </Button>
       </Box>
       <ToastContainer
