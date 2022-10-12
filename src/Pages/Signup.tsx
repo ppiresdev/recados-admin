@@ -10,6 +10,7 @@ import { useState } from "react";
 import * as yup from "yup";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Link } from "react-router-dom";
 
 type CreateUserResponse = {
   id: string;
@@ -219,7 +220,13 @@ export const SignUp = () => {
         >
           Criar Conta
         </Button>
+        <Box>
+          <Link to={"/login"}>
+            <Typography variant="body1">Já possui uma conta?</Typography>
+          </Link>
+        </Box>
       </Box>
+
       <ToastContainer
         theme="colored"
         position="top-center"

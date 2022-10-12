@@ -11,6 +11,7 @@ import axios, { AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Link } from "react-router-dom";
 
 const loginSchema = yup.object().shape({
   email: yup
@@ -182,6 +183,11 @@ export const Login = () => {
         >
           Entrar
         </Button>
+        <Box>
+          <Link to={"/"}>
+            <Typography variant="body1">Crie uma conta</Typography>
+          </Link>
+        </Box>
       </Box>
       <ToastContainer
         theme="colored"
