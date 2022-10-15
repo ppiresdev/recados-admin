@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -125,6 +126,8 @@ export const Login = () => {
     localStorage.setItem("userLogged", JSON.stringify(userFound._id));
     navigate("/notes");
   };
+
+  const canBeSubmitted = !!email && !!password;
   return (
     <Box
       width="100vw"
@@ -133,74 +136,87 @@ export const Login = () => {
       alignItems="center"
       justifyContent="center"
     >
-      <Box
-        width="15%"
+      {/* <Box
         display="flex"
         alignItems="center"
         justifyContent="center"
         flexDirection="column"
         gap={2}
-      >
-        <Typography variant="h6" align="center">
-          Identifique-se
-        </Typography>
-        <TextField
-          fullWidth
-          label="E-mail"
-          type="email"
-          value={email}
-          disabled={isLoading}
-          error={!!emailError}
-          helperText={emailError}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={() => setEmailError("")}
-        />
-        <TextField
-          fullWidth
-          label="Senha"
-          type="password"
-          value={password}
-          disabled={isLoading}
-          error={!!passwordError}
-          helperText={passwordError}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={() => setPasswordError("")}
-        />
-        <Button
-          fullWidth
-          variant="contained"
-          disabled={isLoading}
-          onClick={handleSubmit}
-          endIcon={
-            isLoading ? (
-              <CircularProgress
-                variant="indeterminate"
-                color="inherit"
-                size={20}
-              />
-            ) : undefined
-          }
+      > */}
+      <Paper elevation={3}>
+        <Box
+          sx={{ p: 2 }}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          flexDirection="column"
+          gap={2}
         >
-          Entrar
-        </Button>
-        <Box>
-          <Link to={"/"}>
-            <Typography variant="body1">Crie uma conta</Typography>
-          </Link>
+          <Typography variant="h4" align="center">
+            Sistema de recados
+          </Typography>
+          <Typography variant="h6" align="center">
+            Identifique-se
+          </Typography>
+          <TextField
+            fullWidth
+            label="E-mail"
+            type="email"
+            value={email}
+            disabled={isLoading}
+            error={!!emailError}
+            helperText={emailError}
+            onChange={(e) => setEmail(e.target.value.toLowerCase())}
+            onKeyDown={() => setEmailError("")}
+          />
+          <TextField
+            fullWidth
+            label="Senha"
+            type="password"
+            value={password}
+            disabled={isLoading}
+            error={!!passwordError}
+            helperText={passwordError}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={() => setPasswordError("")}
+          />
+          <Button
+            fullWidth
+            variant="contained"
+            disabled={!canBeSubmitted}
+            onClick={handleSubmit}
+            endIcon={
+              isLoading ? (
+                <CircularProgress
+                  variant="indeterminate"
+                  color="inherit"
+                  size={20}
+                />
+              ) : undefined
+            }
+          >
+            Entrar
+          </Button>
+          <Box>
+            <Link to={"/"}>
+              <Typography variant="body1">Crie uma conta</Typography>
+            </Link>
+          </Box>
         </Box>
-      </Box>
-      <ToastContainer
-        theme="colored"
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+        <ToastContainer
+          theme="colored"
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      </Paper>
+      {/* </Box> */}
     </Box>
   );
 };

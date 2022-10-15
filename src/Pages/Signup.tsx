@@ -2,10 +2,11 @@ import {
   Box,
   Button,
   CircularProgress,
+  Paper,
   TextField,
   Typography,
 } from "@mui/material";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useState } from "react";
 import * as yup from "yup";
 import { ToastContainer, toast } from "react-toastify";
@@ -29,6 +30,7 @@ const loginSchema = yup.object().shape({
     .required("Campo obrigatório"),
   confirmPassword: yup
     .string()
+    .required("Campo obrigatório")
     .oneOf([yup.ref("password"), null], "As senhas devem ser iguais"),
 });
 
@@ -46,7 +48,7 @@ const notify = () => {
 const notifyEmailAlreadyUsed = () => {
   toast.error("E-mail já em foi usado. Escolha outro!", {
     position: "top-center",
-    autoClose: 2500,
+    autoClose: 3000,
     hideProgressBar: false,
     closeOnClick: true,
     pauseOnHover: true,
@@ -68,23 +70,22 @@ async function createUser(email: string, password: string) {
       }
     );
 
-    console.log("STATUS", status);
-
-    if (status === 201) {
-      notifyEmailAlreadyUsed();
-    }
-
     if (status === 200) {
       notify();
     }
 
     return data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.log("error message: ", error.message);
-      return error.message;
+    const err = error as AxiosError;
+    if (axios.isAxiosError(err)) {
+      if (err.response?.status === 400) {
+        notifyEmailAlreadyUsed();
+      }
+
+      return err.message;
     } else {
-      console.log("unexpected error: ", error);
+      console.log("ERROR2", err);
+
       return "An unexpected error occurred";
     }
   }
@@ -138,10 +139,14 @@ export const SignUp = () => {
           setIsLoading(false);
         });
       });
-
+    // if (email && password.length > 5 && ) {
     createUser(email, password);
     clearFields();
+    // }
   };
+
+  const canBeSubmitted =
+    password.length > 5 && confirmPassword === password && !!email;
 
   return (
     <Box
@@ -152,79 +157,90 @@ export const SignUp = () => {
       justifyContent="center"
     >
       <Box
-        width="15%"
+        // width="50%"
         display="flex"
         alignItems="center"
         justifyContent="center"
         flexDirection="column"
         gap={2}
       >
-        <Typography variant="h4" align="center">
-          Sistema de recados
-        </Typography>
-        <Typography variant="h5" align="center">
-          Crie sua conta
-        </Typography>
-        <TextField
-          fullWidth
-          label="E-mail"
-          type="email"
-          name="email"
-          value={email}
-          disabled={isLoading}
-          error={!!emailError}
-          helperText={emailError}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={() => setEmailError("")}
-        />
-        <TextField
-          fullWidth
-          label="Senha"
-          type="password"
-          name="password"
-          id="password"
-          value={password}
-          disabled={isLoading}
-          error={!!passwordError}
-          helperText={passwordError}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={() => setPasswordError("")}
-        />
-        <TextField
-          fullWidth
-          label="Repita a Senha"
-          type="password"
-          name="confirmPassword"
-          id="confirmPassword"
-          value={confirmPassword}
-          disabled={isLoading}
-          error={!!confirmPasswordError}
-          helperText={confirmPasswordError}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          onKeyDown={() => setConfirmPasswordError("")}
-        />
-        <Button
-          fullWidth
-          variant="contained"
-          disabled={isLoading}
-          onClick={handleSubmit}
-          endIcon={
-            isLoading ? (
-              <CircularProgress
-                variant="indeterminate"
-                color="inherit"
-                size={20}
-              />
-            ) : undefined
-          }
-        >
-          Criar Conta
-        </Button>
-        <Box>
-          <Link to={"/login"}>
-            <Typography variant="body1">Já possui uma conta?</Typography>
-          </Link>
-        </Box>
+        <Paper elevation={3}>
+          <Box
+            sx={{ p: 2 }}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            flexDirection="column"
+            gap={2}
+          >
+            <Typography variant="h4" align="center">
+              Sistema de recados
+            </Typography>
+            <Typography variant="h5" align="center">
+              Crie sua conta
+            </Typography>
+            <TextField
+              fullWidth
+              label="E-mail"
+              type="email"
+              name="email"
+              value={email}
+              disabled={isLoading}
+              error={!!emailError}
+              helperText={emailError}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={() => setEmailError("")}
+            />
+            <TextField
+              fullWidth
+              label="Senha"
+              type="password"
+              name="password"
+              id="password"
+              value={password}
+              disabled={isLoading}
+              error={!!passwordError}
+              helperText={passwordError}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={() => setPasswordError("")}
+            />
+            <TextField
+              fullWidth
+              label="Repita a Senha"
+              type="password"
+              name="confirmPassword"
+              id="confirmPassword"
+              value={confirmPassword}
+              disabled={isLoading}
+              error={!!confirmPasswordError}
+              helperText={confirmPasswordError}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={() => setConfirmPasswordError("")}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              disabled={!canBeSubmitted}
+              onClick={handleSubmit}
+              endIcon={
+                isLoading ? (
+                  <CircularProgress
+                    variant="indeterminate"
+                    color="inherit"
+                    size={20}
+                  />
+                ) : undefined
+              }
+            >
+              Criar Conta
+            </Button>
+            <Box>
+              <Link to={"/login"}>
+                <Typography variant="body1">Já possui uma conta?</Typography>
+              </Link>
+            </Box>
+          </Box>
+        </Paper>
       </Box>
 
       <ToastContainer

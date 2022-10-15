@@ -17,6 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import axios, { AxiosResponse } from "axios";
 import { ToastContainer, toast } from "react-toastify";
@@ -40,6 +41,8 @@ export const Notes = () => {
   const [value, setValue] = React.useState("");
   const [contentFilter, setContentFilter] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getNotesList = async () => {
@@ -120,8 +123,6 @@ export const Notes = () => {
   };
 
   const onClickFilter = async () => {
-    console.log("VALUE", value);
-    console.log("TEXT", contentFilter);
     let query = "";
 
     if (statusFilter && statusFilter !== "none") {
@@ -134,13 +135,14 @@ export const Notes = () => {
           ? `&content=${contentFilter}`
           : `?content=${contentFilter}`;
     }
-    console.log("Query", query);
 
     const { data }: AxiosResponse<Note[]> = await axios.get(
       process.env.REACT_APP_URL + `user/${userLogged}/notes${query}`
     );
-    console.log("DATATA", data);
+
     setNotesList(data);
+    setContentFilter("");
+    setStatusFilter("none");
   };
 
   const notify = () => {
@@ -155,6 +157,11 @@ export const Notes = () => {
     });
   };
 
+  const logout = () => {
+    localStorage.removeItem("userLogged");
+    navigate("/");
+  };
+
   return (
     <Box
       sx={{ width: "50%", margin: "0 auto" }}
@@ -162,9 +169,18 @@ export const Notes = () => {
       flexDirection="column"
       gap={2}
     >
-      <Typography variant="h3" textAlign="center">
-        Sistema de Recados
-      </Typography>
+      <Box display="flex" justifyContent="space-around">
+        <Typography variant="h3" textAlign="left">
+          Sistema de Recados
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ width: "100px", padding: "10px 0" }}
+          onClick={() => logout()}
+        >
+          Sair
+        </Button>
+      </Box>
       <Box display="flex" gap={2}>
         <TextField
           fullWidth
@@ -195,32 +211,43 @@ export const Notes = () => {
           onChange={(e) => setContentFilter(e.target.value)}
           // onKeyDown={() => setNoteError("")}
         />
-        <FormControl>
-          <FormLabel id="demo-controlled-radio-buttons-group">
-            Filtro por status
-          </FormLabel>
-          <RadioGroup
-            aria-labelledby="demo-controlled-radio-buttons-group"
-            name="controlled-radio-buttons-group"
-            value={statusFilter}
-            onChange={handleChange}
-          >
-            <FormControlLabel
-              value="false"
-              control={<Radio />}
-              label="Arquivado"
-            />
-            <FormControlLabel
-              value="true"
-              control={<Radio />}
-              label="Não arquivado"
-            />
-            <FormControlLabel value="none" control={<Radio />} label="Nenhum" />
-          </RadioGroup>
-          <Button variant="contained" onClick={() => onClickFilter()}>
-            Filtrar
-          </Button>
-        </FormControl>
+        <Box marginTop="10px">
+          <FormControl>
+            <FormLabel id="demo-controlled-radio-buttons-group">
+              Filtro por status
+            </FormLabel>
+            <RadioGroup
+              row
+              aria-labelledby="demo-controlled-radio-buttons-group"
+              name="controlled-radio-buttons-group"
+              value={statusFilter}
+              onChange={handleChange}
+            >
+              <FormControlLabel
+                value="false"
+                control={<Radio />}
+                label="Arquivado"
+              />
+              <FormControlLabel
+                value="true"
+                control={<Radio />}
+                label="Não arquivado"
+              />
+              <FormControlLabel
+                value="none"
+                control={<Radio />}
+                label="Nenhum"
+              />
+            </RadioGroup>
+            <Button
+              variant="contained"
+              onClick={() => onClickFilter()}
+              sx={{ width: "50%" }}
+            >
+              Filtrar
+            </Button>
+          </FormControl>
+        </Box>
       </Box>
       <Box>
         <TableContainer component={Paper}>
