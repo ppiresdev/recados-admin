@@ -84,8 +84,6 @@ async function createUser(email: string, password: string) {
 
       return err.message;
     } else {
-      console.log("ERROR2", err);
-
       return "An unexpected error occurred";
     }
   }
@@ -118,11 +116,6 @@ export const SignUp = () => {
         { abortEarly: false }
       )
       .then((validData) => {
-        console.log(
-          validData.email,
-          validData.password,
-          validData.confirmPassword
-        );
         setIsLoading(false);
       })
       .catch((errors: yup.ValidationError) => {
@@ -139,10 +132,9 @@ export const SignUp = () => {
           setIsLoading(false);
         });
       });
-    // if (email && password.length > 5 && ) {
+
     createUser(email, password);
     clearFields();
-    // }
   };
 
   const canBeSubmitted =

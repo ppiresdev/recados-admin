@@ -73,7 +73,6 @@ export const Login = () => {
         { abortEarly: false }
       )
       .then((validData) => {
-        console.log(validData.email, validData.password);
         setIsLoading(false);
       })
       .catch((errors: yup.ValidationError) => {
@@ -106,7 +105,7 @@ export const Login = () => {
         _notes: note[];
       }[]
     > = await axios.get(process.env.REACT_APP_URL + "users");
-    console.log(data);
+
     const userFound = data.find(
       (user) =>
         user._email === myObject.email && user._password === myObject.password

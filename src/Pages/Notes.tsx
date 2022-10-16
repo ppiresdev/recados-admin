@@ -64,7 +64,6 @@ export const Notes = () => {
 
   const handleSubmit = async () => {
     if (isEdit) {
-      console.log("Editando");
       const response = await axios.put(
         process.env.REACT_APP_URL + `user/${userLogged}/note/${noteIdToEdit}`,
         {
