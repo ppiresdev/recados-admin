@@ -6,13 +6,21 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as yup from "yup";
 import axios, { AxiosResponse } from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store";
+import { useDispatch } from "react-redux";
+import {
+  clearUserSuccess,
+  userLogin,
+  clearLoginStatus,
+} from "../store/reducers/slices/UserSlice";
 
 const loginSchema = yup.object().shape({
   email: yup
@@ -38,6 +46,9 @@ export const Login = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
+
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch<AppDispatch>();
 
   const notifyUserNotFound = () => {
     toast.error("Usuário não encontrado!", {
@@ -89,41 +100,61 @@ export const Login = () => {
     login();
   };
 
+  useEffect(() => {
+    if (user.login_status !== "Usuário não encontrado!" && user.success) {
+      localStorage.setItem("userLogged", "");
+      localStorage.setItem("userLogged", JSON.stringify(user.login_status));
+
+      dispatch(clearUserSuccess());
+      dispatch(clearLoginStatus());
+      navigate("/notes");
+    }
+    if (user.login_status === "Usuário não encontrado!") {
+      notifyUserNotFound();
+      dispatch(clearUserSuccess());
+      dispatch(clearLoginStatus());
+    }
+
+    // return () => {
+    //   dispatch(clearLoginStatus());
+    // };
+  }, [user]);
+
   const login = async () => {
     const myObject = {
       password,
       email,
     };
 
-    const {
-      data,
-    }: AxiosResponse<
-      {
-        _id: string;
-        _email: string;
-        _password: string;
-        _notes: note[];
-      }[]
-    > = await axios.get(process.env.REACT_APP_URL + "users");
+    // const {
+    //   data,
+    // }: AxiosResponse<
+    //   {
+    //     _id: string;
+    //     _email: string;
+    //     _password: string;
+    //     _notes: note[];
+    //   }[]
+    // > = await axios.get(process.env.REACT_APP_URL + "users");
 
-    const userFound = data.find(
-      (user) =>
-        user._email === myObject.email && user._password === myObject.password
-    );
+    // const userFound = data.find(
+    //   (user) =>
+    //     user._email === myObject.email && user._password === myObject.password
+    // );
 
-    if (!email || !password) {
-      notifyEmptyFields();
-      return;
-    }
-    if (!userFound) {
-      // return alert("Usuario não encontrado!");
-      notifyUserNotFound();
-      return;
-    }
+    // if (!email || !password) {
+    //   notifyEmptyFields();
+    //   return;
+    // }
+    // if (!userFound) {
+    //   // return alert("Usuario não encontrado!");
+    //   notifyUserNotFound();
+    //   return;
+    // }
+    // console.log("===myObject====", myObject);
+    // console.log("===USEr===", user);
 
-    localStorage.setItem("userLogged", "");
-    localStorage.setItem("userLogged", JSON.stringify(userFound._id));
-    navigate("/notes");
+    dispatch(userLogin(myObject));
   };
 
   const canBeSubmitted = !!email && !!password;
@@ -151,6 +182,12 @@ export const Login = () => {
           flexDirection="column"
           gap={2}
         >
+          {user.loading && (
+            <Typography variant="h5" align="center" color="red">
+              Carregando...
+            </Typography>
+          )}
+
           <Typography variant="h4" align="center">
             Sistema de recados
           </Typography>

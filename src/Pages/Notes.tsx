@@ -24,9 +24,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 interface Note {
-  _id: string;
-  _content: string;
-  _status: boolean;
+  id: string;
+  content: string;
+  status: boolean;
 }
 
 export const Notes = () => {
@@ -56,7 +56,7 @@ export const Notes = () => {
       getNotesList();
       setHasUpdatedNotesList(false);
     }
-  }, [hasUpdatedNotesList]);
+  }, [hasUpdatedNotesList, notesList, userLogged]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setStatusFilter((event.target as HTMLInputElement).value);
@@ -65,7 +65,7 @@ export const Notes = () => {
   const handleSubmit = async () => {
     if (isEdit) {
       const response = await axios.put(
-        process.env.REACT_APP_URL + `user/${userLogged}/note/${noteIdToEdit}`,
+        process.env.REACT_APP_URL + `note/${noteIdToEdit}`,
         {
           content: note,
         }
@@ -83,7 +83,6 @@ export const Notes = () => {
           content: note,
         }
       );
-
       if ((response.status = 200)) {
         notify();
       }
@@ -94,7 +93,7 @@ export const Notes = () => {
 
   const changeStatus = async (status: boolean, noteId: string) => {
     const response = await axios.put(
-      process.env.REACT_APP_URL + `user/${userLogged}/note/${noteId}`,
+      process.env.REACT_APP_URL + `note/${noteId}`,
       {
         status: !status,
       }
@@ -107,7 +106,7 @@ export const Notes = () => {
 
   const deleteNote = async (noteId: string) => {
     const response = await axios.delete(
-      process.env.REACT_APP_URL + `user/${userLogged}/note/${noteId}`
+      process.env.REACT_APP_URL + `note/${noteId}`
     );
     if ((response.status = 200)) {
       setHasUpdatedNotesList(true);
@@ -279,13 +278,13 @@ export const Notes = () => {
             <TableBody>
               {notesList?.map((row, index) => (
                 <TableRow
-                  key={row._id}
+                  key={row.id}
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell align="center">{row._content}</TableCell>
+                  <TableCell align="center">{row.content}</TableCell>
                   <TableCell align="center">
-                    {row._status ? "Não arquivado" : "Arquivado"}
+                    {row.status ? "Não arquivado" : "Arquivado"}
                   </TableCell>
                   <TableCell align="center">
                     {
@@ -298,14 +297,14 @@ export const Notes = () => {
                         <Button
                           variant="contained"
                           sx={{ width: "130px" }}
-                          onClick={() => changeStatus(row._status, row._id)}
+                          onClick={() => changeStatus(row.status, row.id)}
                         >
-                          {row._status ? "Arquivar" : "Desarquivar"}
+                          {row.status ? "Arquivar" : "Desarquivar"}
                         </Button>
                         <Button
                           variant="contained"
                           sx={{ width: "100px" }}
-                          onClick={() => btnEditOnClick(row._id, row._content)}
+                          onClick={() => btnEditOnClick(row.id, row.content)}
                         >
                           Editar
                         </Button>
@@ -313,7 +312,7 @@ export const Notes = () => {
                           variant="contained"
                           sx={{ width: "100px" }}
                           color="error"
-                          onClick={() => deleteNote(row._id)}
+                          onClick={() => deleteNote(row.id)}
                         >
                           Excluir
                         </Button>

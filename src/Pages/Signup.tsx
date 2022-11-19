@@ -7,11 +7,19 @@ import {
   Typography,
 } from "@mui/material";
 import axios, { AxiosError } from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as yup from "yup";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store";
+import { useDispatch } from "react-redux";
+import {
+  clearUserSuccess,
+  clearCreateStatus,
+  createUser,
+} from "../store/reducers/slices/UserSlice";
 
 type CreateUserResponse = {
   id: string;
@@ -57,7 +65,7 @@ const notifyEmailAlreadyUsed = () => {
   });
 };
 
-async function createUser(email: string, password: string) {
+async function createUserr(email: string, password: string) {
   try {
     const { data, status } = await axios.post<CreateUserResponse>(
       process.env.REACT_APP_URL + "user",
@@ -97,6 +105,8 @@ export const SignUp = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch<AppDispatch>();
 
   const clearFields = () => {
     setEmail("");
@@ -105,7 +115,7 @@ export const SignUp = () => {
   };
 
   const handleSubmit = () => {
-    setIsLoading(true);
+    // setIsLoading(true);
     loginSchema
       .validate(
         {
@@ -116,7 +126,7 @@ export const SignUp = () => {
         { abortEarly: false }
       )
       .then((validData) => {
-        setIsLoading(false);
+        // setIsLoading(false);
       })
       .catch((errors: yup.ValidationError) => {
         errors.inner.forEach((error) => {
@@ -129,16 +139,35 @@ export const SignUp = () => {
           if (error.path === "confirmPassword") {
             setConfirmPasswordError(error.message);
           }
-          setIsLoading(false);
+          //setIsLoading(false);
         });
       });
 
-    createUser(email, password);
+    // createUser(email, password);
+
+    dispatch(createUser({ email, password }));
+
     clearFields();
   };
 
+  useEffect(() => {
+    if (user.create_status === "E-mail já está em uso") {
+      notifyEmailAlreadyUsed();
+    }
+    if (user.create_status === "Usuário criado com sucesso") {
+      notify();
+    }
+    return () => {
+      dispatch(clearCreateStatus());
+      dispatch(clearUserSuccess());
+    };
+  }, [user]);
+
   const canBeSubmitted =
-    password.length > 5 && confirmPassword === password && !!email;
+    password.length > 5 &&
+    confirmPassword === password &&
+    email.includes("@") &&
+    email.length > 8;
 
   return (
     <Box
@@ -165,6 +194,11 @@ export const SignUp = () => {
             flexDirection="column"
             gap={2}
           >
+            {user.loading && (
+              <Typography variant="h6" align="center" color="red">
+                Carregando...
+              </Typography>
+            )}
             <Typography variant="h4" align="center">
               Sistema de recados
             </Typography>
