@@ -154,7 +154,7 @@ export const SignUp = () => {
     if (user.create_status === "E-mail já está em uso") {
       notifyEmailAlreadyUsed();
     }
-    if (user.create_status === "Usuário criado com sucesso") {
+    if (user.create_status && user.create_status !== "E-mail já está em uso") {
       notify();
     }
     return () => {
