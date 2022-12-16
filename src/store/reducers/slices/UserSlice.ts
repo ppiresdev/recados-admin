@@ -39,11 +39,11 @@ export const createUser = createAsyncThunk(
           },
         }
       );
-      console.log("Resp.data", resp.data);
+      // console.log("Resp.data", resp.data);
 
       return resp.data;
     } catch (error: any) {
-      console.log("Error", error.response.status);
+      // console.log("Error", error.response.status);
       return error.response.data;
     }
   }
